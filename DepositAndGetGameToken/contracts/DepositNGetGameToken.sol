@@ -57,7 +57,7 @@ contract DepositAndGetGameTokenContract is ReentrancyGuard {
         _;
     }
 
-    function depositTokens(uint256 amount) external onlyOwner {
+    function depositGameTokens(uint256 amount) external onlyOwner {
         require(
             gameToken.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
@@ -66,7 +66,7 @@ contract DepositAndGetGameTokenContract is ReentrancyGuard {
         emit TokensDeposited(amount);
     }
 
-    function withdrawTokens(uint256 amount) external onlyOwner {
+    function withdrawGameTokens(uint256 amount) external onlyOwner {
         require(totalGameTokens >= amount, "Not Enough Tokens to Withdraw");
         require(
             gameToken.transfer(msg.sender, amount),
