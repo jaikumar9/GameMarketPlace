@@ -1,0 +1,186 @@
+.navbar {
+  position: absolute;
+  width: 100%; 
+  top: 0;
+  z-index: 1;  
+}
+
+.heading h1{
+  font-size: 6rem;
+  font-weight: bold;
+}
+
+/* Add responsiveness for smaller screens */
+@media (max-width: 768px) {
+  .heading h1 {
+    font-size: 3rem; 
+  }
+
+  .navbar-nav {
+    flex-direction: column; 
+  }
+  .background-image {
+    width: 43%;
+  }
+  .circle-img{
+    width: 40px!important;
+  }
+
+  .navbar-collapse ul{
+    border: none !important;
+    gap: 10px !important;
+  }
+  .backsideImage {
+    height: auto !important; 
+  }
+
+}
+
+@media (max-width: 426px) {
+  .background-image {
+    width: 59% !important;
+  }
+  .circle-img{
+    width: 40px!important;
+  }
+  .navbar-collapse ul{
+    border: none !important;
+    gap: 10px !important;
+  }
+}
+
+ul.navbar-nav {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mt-5.d-flex {
+  margin-top: 2rem !important; 
+}
+
+.heading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.heading {
+  margin: 0 10px;
+}
+
+.background-image {
+  background-image: url('../public/Images/Group.png'); 
+  background-size: cover;
+  background-position: center;
+  width: 42%;
+}
+
+.getstart-btn button{
+  padding: 6px 15px 6px 15px;
+  border-radius: 12px;
+  background: linear-gradient(270.24deg, #CEBCA5 -34.7%, #FF2674 99.79%);
+  border: none;
+}
+/* 
+.connect-btn{
+  padding: 6px 15px 6px 15px;
+  border-radius: 20px;
+  background: radial-gradient(114.61% 114.61% at 50% 0%, #35343D 0%, #454548 100%);
+  border: none;
+} */
+
+.circle-img{
+  padding: 6px;
+}
+
+.gt-btn button{
+  background: linear-gradient(270.24deg, #CEBCA5 -34.7%, #FF2674 99.79%);
+  border: none;
+  padding: 3px 15px 3px 15px;
+  border-radius: 12px;
+}
+
+.backsideImage {
+  background-image: url('../public/Images/background-image.png');
+  background-size: cover;    
+  background-position: center; 
+  height: 919px; 
+  position: relative; 
+  background-color: #1b1b1b;
+}
+
+.form-label {
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.deposit-btn button{
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(90deg, #50CA63 0%, #42AD52 100%);
+  border: none;
+}
+
+.withdraw-btn button{
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(180deg, #FF1B1B 0%, #F74141 45.93%, #FF0000 100%);
+  border: none;
+}
+
+.lusend {
+  width: 30px;
+  height: 30px;
+}
+
+.mines-box{
+  background: radial-gradient(30.7% 30.7% at 50% 50%, #382C36 0%, #292128 100%);
+}
+
+.custom-placeholder{
+  background-color: #251A23 !important;
+}
+
+.custom-placeholder::placeholder {
+  font-size: 10px;
+  color: rgb(134, 127, 133) !important;
+}
+
+.start-game-btn button{
+  background: linear-gradient(270.24deg, #CEBCA5 -34.7%, #FF2674 99.79%);
+  border: none;
+  color: #fff;
+  padding: 5px 70px 5px 70px;
+  border-radius: 5px;
+}
+
+.box-game{
+    width: 6%;
+    height: 40px;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    background: radial-gradient(50% 50% at 50% 50%, #685D61 0%, #55484C 100%);
+    color: linear-gradient(169.9deg, #BDB4B7 7.56%, #55484C 84.14%);
+}
+
+.mine button{
+  background: #65A30D;
+  padding: 2px 35px 2px 35px;
+}
+
+.mine-2 button{
+  background: #DC2626;
+  padding: 2px 35px 2px 35px;
+}
+
+.mine-3 button{
+  padding: 2px 35px 2px 35px;
+  background-color: #787678;
+}
