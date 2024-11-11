@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract TreasureHunt is ReentrancyGuard {
@@ -9,20 +10,26 @@ contract TreasureHunt is ReentrancyGuard {
     uint8 internal treasurePosition;
     uint256 public round;
     uint256 public prizePool;
+    uint256 public moveCost = 2000; // Cost of each move in tokens
+
+    IERC20 public gameToken;
+    address public owner;
     address public winner;
 
-    address[] public players;
     mapping(address => uint8) public playerPositions;
     mapping(address => bool) public hasMoved;
+    mapping(address => bool) public isPlayer;
+    address[] public players;
 
     event PlayerMoved(address indexed player, uint8 position);
     event TreasureMoved(uint8 newPosition);
     event GameWon(address indexed winner, uint256 prize);
 
-    constructor() payable {
+    constructor(address _tokenAddress, address _ownerAddress ) {
+        gameToken = IERC20(_tokenAddress);
+        owner = _ownerAddress;
         treasurePosition = uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.number))) % TOTAL_CELLS);
         round = 1;
-        prizePool = msg.value;
     }
 
     modifier onlyOncePerRound() {
@@ -36,38 +43,24 @@ contract TreasureHunt is ReentrancyGuard {
         _;
     }
 
-    function move(uint8 newPosition) public payable nonReentrant {
-        require(msg.value > 0, "Must send ETH to participate.");
+    function move(uint8 newPosition) public nonReentrant onlyOncePerRound validMove(newPosition) {
+        // Transfer tokens from player to the contract as the move cost
+        require(gameToken.transferFrom(msg.sender, address(this), moveCost), "Token transfer failed");
 
-        if (playerPositions[msg.sender] == 0) {
+        if (!isPlayer[msg.sender]) {
             players.push(msg.sender);
+            isPlayer[msg.sender] = true;
         }
 
+        playerPositions[msg.sender] = newPosition;
+        prizePool += moveCost;
+        hasMoved[msg.sender] = true;
+
+        emit PlayerMoved(msg.sender, newPosition);
+
         if (newPosition == treasurePosition) {
-            playerPositions[msg.sender] = newPosition;
-            prizePool += msg.value;
-            hasMoved[msg.sender] = true;
-
-            emit PlayerMoved(msg.sender, newPosition);
             _winGame();
-        } else if (newPosition % 5 == 0) {
-            playerPositions[msg.sender] = newPosition;
-            prizePool += msg.value;
-            hasMoved[msg.sender] = true;
-
-            emit PlayerMoved(msg.sender, newPosition);
-
-            _moveTreasure(newPosition);
         } else {
-            require(!hasMoved[msg.sender], "Player has already moved this round.");
-            require(newPosition < TOTAL_CELLS, "Invalid move.");
-            require(isAdjacent(playerPositions[msg.sender], newPosition), "Move must be adjacent.");
-
-            playerPositions[msg.sender] = newPosition;
-            prizePool += msg.value;
-            hasMoved[msg.sender] = true;
-
-            emit PlayerMoved(msg.sender, newPosition);
             _moveTreasure(newPosition);
         }
     }
@@ -78,19 +71,29 @@ contract TreasureHunt is ReentrancyGuard {
         } else if (_isPrime(playerPosition)) {
             treasurePosition = uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao))) % TOTAL_CELLS);
         }
-
         emit TreasureMoved(treasurePosition);
     }
 
-    function _winGame() internal {
-        winner = msg.sender;
-        uint256 reward = (prizePool * 90) / 100;
-        payable(winner).transfer(reward);
-        prizePool = address(this).balance;
-        emit GameWon(winner, reward);
+    function _winGame() internal nonReentrant {
+    winner = msg.sender;
+    uint256 reward = (prizePool * 90) / 100;
+    uint256 ownerShare = (prizePool * 2) / 100;
+    uint256 carryOver = (prizePool * 8) / 100;
 
-        _resetGame();
-    }
+    // Update prize pool to carry over before making transfers
+    prizePool = carryOver;
+
+    // Transfer the 90% reward to the winner
+    require(gameToken.transfer(winner, reward), "Token transfer to winner failed");
+
+    // Transfer the 2% share to the owner
+    require(gameToken.transfer(owner, ownerShare), "Token transfer to owner failed");
+
+    emit GameWon(winner, reward);
+
+    // Reset the game for the next round
+    _resetGame();
+}
 
     function _resetGame() internal {
         round++;
@@ -127,20 +130,17 @@ contract TreasureHunt is ReentrancyGuard {
 
     function _isPrime(uint8 num) internal pure returns (bool) {
         if (num < 2) return false;
-        for (uint8 i = 2; i 
-        * i <= num; i++) {
+        for (uint8 i = 2; i * i <= num; i++) {
             if (num % i == 0) return false;
         }
         return true;
     }
 
     function isAdjacent(uint8 pos1, uint8 pos2) internal pure returns (bool) {
-        bool isUp = (pos1 >= GRID_SIZE && pos1 - GRID_SIZE == pos2);
-        bool isDown = (pos1 < TOTAL_CELLS - GRID_SIZE && pos1 + GRID_SIZE == pos2);
-        bool isLeft = (pos1 % GRID_SIZE != 0 && pos1 - 1 == pos2);
-        bool isRight = ((pos1 + 1) % GRID_SIZE != 0 && pos1 + 1 == pos2);
-
-        return isUp || isDown || isLeft || isRight;
+        return (pos1 >= GRID_SIZE && pos1 - GRID_SIZE == pos2) ||
+               (pos1 < TOTAL_CELLS - GRID_SIZE && pos1 + GRID_SIZE == pos2) ||
+               (pos1 % GRID_SIZE != 0 && pos1 - 1 == pos2) ||
+               ((pos1 + 1) % GRID_SIZE != 0 && pos1 + 1 == pos2);
     }
 
     function getTreasurePosition() public view returns (uint8) {
@@ -148,6 +148,6 @@ contract TreasureHunt is ReentrancyGuard {
     }
 
     function getGameState() public view returns (address, uint256) {
-        return ( winner, prizePool);
+        return (winner, prizePool);
     }
 }

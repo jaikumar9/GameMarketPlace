@@ -6,7 +6,7 @@ import { CiWallet, CiDollar } from "react-icons/ci";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
-// Replace these with your actual contract addresses and ABIs
+
 const DEPOSIT_CONTRACT_ADDRESS = "0x3f01c267409997CAf4C36d87044d23565aD2e1A1";
 const USDT_CONTRACT_ADDRESS = "0x34B91E48ED76ae6083cd9E247b7F13F06026674B";
 const GT_CONTRACT_ADDRESS = "0x76a91D3BB3ba0143aD29DF7581A89c3C4dEBb840";
@@ -403,7 +403,7 @@ const DEPOSIT_ABI = [
 		"stateMutability": "payable",
 		"type": "receive"
 	}
-]; // Replace with your deposit contract ABI
+]; 
 const USDT_ABI = [
 	{
 		"inputs": [],
@@ -863,7 +863,7 @@ const USDT_ABI = [
 		"stateMutability": "nonpayable",
 		"type": "function"
 	}
-]; // Replace with your USDT contract ABI
+]; 
 const GT_ABI = [
 	{
 		"inputs": [
@@ -1486,7 +1486,7 @@ const GT_ABI = [
 		"stateMutability": "nonpayable",
 		"type": "function"
 	}
-]; // Replace with your GT contract ABI
+]; 
 
 
 function Swap() {
