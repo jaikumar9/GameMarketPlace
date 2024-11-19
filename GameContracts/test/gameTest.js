@@ -42,6 +42,47 @@ describe("TreasureHunt", function () {
   });
 
   describe("Game Mechanics", function () {
+    it("Should reward the winner when they find the treasure", async function () {
+      const { treasureHunt, gameToken, owner, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
+    
+      // Approve tokens for player1 to make a move
+      await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
+    
+      // Simulate a move where player1 finds the treasure
+      await treasureHunt.connect(player1).move(1);
+    
+      // Fetch the treasure position after player1's move
+      const tPosition = await treasureHunt.connect(owner).getTreasurePosition();
+    
+      // Approve tokens for player2 to make a move
+      await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
+    
+      // Fetch the prize pool before player2 makes a move
+      const prizePoolBefore = await treasureHunt.prizePool();
+    
+      // Convert prize pool from wei to ether using ethers v6 syntax
+      const prizePoolBeforeEther = ethers.formatEther(prizePoolBefore);
+    
+      // Player2 moves to the same position as the treasure
+      await treasureHunt.connect(player2).move(tPosition);
+    
+      // Fetch the prize pool after player2 makes a move
+      const prizePoolAfter = await treasureHunt.prizePool();
+    
+      // Convert prize pool from wei to ether using ethers v6 syntax
+      const prizePoolAfterEther = ethers.formatEther(prizePoolAfter);
+    
+      // Check that the prize pool after the move is less than before
+      expect(Number(prizePoolAfterEther)).to.be.lessThan(Number(prizePoolBeforeEther));
+    
+      // Log the prize pool in Ether
+      console.log("Prize Pool Before in Ether:", prizePoolBeforeEther);
+      console.log("Prize Pool After in Ether:", prizePoolAfterEther);
+    });
+    
+    
+    
+    
     it("Should allow player to make a valid move", async function () {
       const { treasureHunt, gameToken, player1 } = await loadFixture(deployTreasureHuntFixture);
       
@@ -96,10 +137,12 @@ describe("TreasureHunt", function () {
       expect(currentPrizePool).to.equal(0);
     });
 
-    it("Should have accessible treasure position", async function () {
-      const { treasureHunt } = await loadFixture(deployTreasureHuntFixture);
-      const position = await treasureHunt.getTreasurePosition();
-      expect(position).to.be.lessThan(100);
+    it("Should not expose treasure position to players", async function () {
+      const { treasureHunt, player1 } = await loadFixture(deployTreasureHuntFixture);
+      
+      await expect(
+        treasureHunt.connect(player1).getTreasurePosition()
+      ).to.be.revertedWith("Only the owner can call this function.");
     });
   });
 });

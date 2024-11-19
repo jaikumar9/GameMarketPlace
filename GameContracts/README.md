@@ -11,3 +11,12 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat ignition deploy ./ignition/modules/Lock.js
 ```
+$ npx hardhat ignition verify chain-80002 
+
+
+Deployed Addresses and Verified Contracts
+
+GameMarketplaceModule#GameToken - 0x68C419f4986251eE774d09b6e0E8514EB8DdEf1D
+GameMarketplaceModule#MockUSDT - 0x459B5C8881CF1a739834962FAF307851bd402739
+GameMarketplaceModule#DepositAndGetGameTokenContract - 0x116Dbbb71281b83e392b25b96F12c343b97919AE
+GameMarketplaceModule#TreasureHunt - 0x6D0F90CB4506bE778E1B4DD0cA3bfBe65A99e756 

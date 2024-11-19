@@ -1,15 +1,25 @@
 const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
 
-const JAN_1ST_2030 = 1893456000;
-const ONE_GWEI = 1_000_000_000n;
+const OWNER_ADDRESS = "0x970eA4a7F0F0872B5aC888f00B82E07f2aC31799";
 
-module.exports = buildModule("LockModule", (m) => {
-  const unlockTime = m.getParameter("unlockTime", JAN_1ST_2030);
-  const lockedAmount = m.getParameter("lockedAmount", ONE_GWEI);
+module.exports = buildModule("GameMarketplaceModule", (m) => {
+  // Step 1: Deploy MockUSDT
+  const mockUSDT = m.contract("MockUSDT");
 
-  const lock = m.contract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
+  // Step 2: Deploy GameToken
+  const gameToken = m.contract("GameToken", [OWNER_ADDRESS]);
 
-  return { lock };
+  // Step 3: Deploy DepositAndGetGameTokenContract
+  const depositAndGetGameToken = m.contract(
+    "DepositAndGetGameTokenContract",
+    [OWNER_ADDRESS, gameToken, mockUSDT, mockUSDT]
+  );
+
+  // Step 4: Deploy TreasureHunt
+  const treasureHunt = m.contract(
+    "TreasureHunt",
+    [gameToken, OWNER_ADDRESS]
+  );
+
+  return { mockUSDT, gameToken, depositAndGetGameToken, treasureHunt };
 });

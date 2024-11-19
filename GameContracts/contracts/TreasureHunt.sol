@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol"; // To fetch token decimals
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract TreasureHunt is ReentrancyGuard {
@@ -10,7 +11,8 @@ contract TreasureHunt is ReentrancyGuard {
     uint8 internal treasurePosition;
     uint256 public round;
     uint256 public prizePool;
-    uint256 public moveCost = 2000; // Cost of each move in tokens
+    uint256 public moveCost; // Cost of each move in tokens
+    uint8 public tokenDecimals; // Decimals of the token
 
     IERC20 public gameToken;
     address public owner;
@@ -19,17 +21,35 @@ contract TreasureHunt is ReentrancyGuard {
     mapping(address => uint8) public playerPositions;
     mapping(address => bool) public hasMoved;
     mapping(address => bool) public isPlayer;
+    mapping(uint8 => bool) public isOccupied; // Tracks if a position is occupied by a player
     address[] public players;
 
+    event RewardDistributed(
+        address indexed winner,
+        uint256 winnerShare,
+        uint256 ownerShare,
+        uint256 nextRoundShare
+    );
+
     event PlayerMoved(address indexed player, uint8 position);
-    event TreasureMoved(uint8 newPosition);
     event GameWon(address indexed winner, uint256 prize);
 
-    constructor(address _tokenAddress, address _ownerAddress ) {
+    constructor(address _tokenAddress, address _ownerAddress) {
         gameToken = IERC20(_tokenAddress);
         owner = _ownerAddress;
+
+        // Dynamically fetch the token's decimals
+        tokenDecimals = IERC20Metadata(_tokenAddress).decimals();
+        moveCost = 2000 * 10**tokenDecimals; // Adjust for token decimals
+
+        // Initialize treasure position
         treasurePosition = uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.number))) % TOTAL_CELLS);
         round = 1;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can call this function.");
+        _;
     }
 
     modifier onlyOncePerRound() {
@@ -39,11 +59,10 @@ contract TreasureHunt is ReentrancyGuard {
 
     modifier validMove(uint8 newPosition) {
         require(newPosition < TOTAL_CELLS, "Invalid move.");
-        require(isAdjacent(playerPositions[msg.sender], newPosition), "Move must be adjacent.");
         _;
     }
 
-    function move(uint8 newPosition) public nonReentrant onlyOncePerRound validMove(newPosition) {
+    function move(uint8 newPosition) public  onlyOncePerRound validMove(newPosition) {
         // Transfer tokens from player to the contract as the move cost
         require(gameToken.transferFrom(msg.sender, address(this), moveCost), "Token transfer failed");
 
@@ -53,6 +72,7 @@ contract TreasureHunt is ReentrancyGuard {
         }
 
         playerPositions[msg.sender] = newPosition;
+        isOccupied[newPosition] = true; // Mark the position as occupied
         prizePool += moveCost;
         hasMoved[msg.sender] = true;
 
@@ -67,46 +87,53 @@ contract TreasureHunt is ReentrancyGuard {
 
     function _moveTreasure(uint8 playerPosition) internal {
         if (playerPosition % 5 == 0) {
-            treasurePosition = _getRandomAdjacentPosition(treasurePosition);
+            treasurePosition = _getRandomAdjacentVacantPosition(treasurePosition);
         } else if (_isPrime(playerPosition)) {
-            treasurePosition = uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao))) % TOTAL_CELLS);
-        }
-        emit TreasureMoved(treasurePosition);
-    }
-
-    function _winGame() internal nonReentrant {
-    winner = msg.sender;
-    uint256 reward = (prizePool * 90) / 100;
-    uint256 ownerShare = (prizePool * 2) / 100;
-    uint256 carryOver = (prizePool * 8) / 100;
-
-    // Update prize pool to carry over before making transfers
-    prizePool = carryOver;
-
-    // Transfer the 90% reward to the winner
-    require(gameToken.transfer(winner, reward), "Token transfer to winner failed");
-
-    // Transfer the 2% share to the owner
-    require(gameToken.transfer(owner, ownerShare), "Token transfer to owner failed");
-
-    emit GameWon(winner, reward);
-
-    // Reset the game for the next round
-    _resetGame();
-}
-
-    function _resetGame() internal {
-        round++;
-        treasurePosition = uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.number))) % TOTAL_CELLS);
-
-        for (uint256 i = 0; i < players.length; i++) {
-            hasMoved[players[i]] = false;
+            treasurePosition = _getRandomVacantPosition(); // Pick any random vacant position
         }
     }
 
-    function _getRandomAdjacentPosition(uint8 currentPosition) internal view returns (uint8) {
+    function _getRandomAdjacentVacantPosition(uint8 currentPosition) internal view returns (uint8) {
         uint8[] memory adjacentPositions = _getAdjacentPositions(currentPosition);
-        return adjacentPositions[uint256(keccak256(abi.encodePacked(block.timestamp))) % adjacentPositions.length];
+        uint8[] memory vacantPositions = _filterVacantPositions(adjacentPositions);
+
+        require(vacantPositions.length > 0, "No vacant adjacent positions available.");
+
+        return vacantPositions[uint256(keccak256(abi.encodePacked(block.timestamp))) % vacantPositions.length];
+    }
+
+    function _filterVacantPositions(uint8[] memory positions) internal view returns (uint8[] memory) {
+        uint8[] memory vacantPositions = new uint8[](positions.length);
+        uint8 vacantCount = 0;
+
+        for (uint8 i = 0; i < positions.length; i++) {
+            if (!isOccupied[positions[i]]) {
+                vacantPositions[vacantCount++] = positions[i];
+            }
+        }
+
+        // Resize the array to the number of vacant positions
+        uint8[] memory result = new uint8[](vacantCount);
+        for (uint8 i = 0; i < vacantCount; i++) {
+            result[i] = vacantPositions[i];
+        }
+
+        return result;
+    }
+
+    function _getRandomVacantPosition() internal view returns (uint8) {
+        uint8[] memory allPositions = new uint8[](TOTAL_CELLS);
+        uint8 vacantCount = 0;
+
+        for (uint8 i = 0; i < TOTAL_CELLS; i++) {
+            if (!isOccupied[i]) {
+                allPositions[vacantCount++] = i;
+            }
+        }
+
+        require(vacantCount > 0, "No vacant positions available.");
+
+        return allPositions[uint256(keccak256(abi.encodePacked(block.timestamp))) % vacantCount];
     }
 
     function _getAdjacentPositions(uint8 position) internal pure returns (uint8[] memory) {
@@ -136,14 +163,63 @@ contract TreasureHunt is ReentrancyGuard {
         return true;
     }
 
-    function isAdjacent(uint8 pos1, uint8 pos2) internal pure returns (bool) {
-        return (pos1 >= GRID_SIZE && pos1 - GRID_SIZE == pos2) ||
-               (pos1 < TOTAL_CELLS - GRID_SIZE && pos1 + GRID_SIZE == pos2) ||
-               (pos1 % GRID_SIZE != 0 && pos1 - 1 == pos2) ||
-               ((pos1 + 1) % GRID_SIZE != 0 && pos1 + 1 == pos2);
+    function _winGame() internal nonReentrant {
+        winner = msg.sender;
+        uint256 reward = (prizePool * 90) / 100;
+        uint256 ownerShare = (prizePool * 2) / 100;
+        uint256 carryOver = (prizePool * 8) / 100;
+
+        // Update prize pool to carry over before making transfers
+        prizePool = carryOver;
+
+        // Transfer the 90% reward to the winner
+        require(gameToken.transfer(winner, reward), "Token transfer to winner failed");
+
+        // Transfer the 2% share to the owner
+        require(gameToken.transfer(owner, ownerShare), "Token transfer to owner failed");
+
+        emit GameWon(winner, reward);
+
+        // Emit RewardDistributed event
+        emit RewardDistributed(winner, reward, ownerShare, carryOver);
+
+        // Reset the game for the next round
+        _resetGame();
     }
 
-    function getTreasurePosition() public view returns (uint8) {
+    function _resetGame() internal {
+        round++;
+        treasurePosition = _getRandomVacantPosition(); // Move treasure to any vacant position
+
+        // Reset player states
+        for (uint256 i = 0; i < players.length; i++) {
+            hasMoved[players[i]] = false;
+            isOccupied[playerPositions[players[i]]] = false; // Mark the previous position as unoccupied
+        }
+
+        // Clear the occupied positions mapping
+        for (uint8 i = 0; i < TOTAL_CELLS; i++) {
+            isOccupied[i] = false; // Mark all positions as vacant
+        }
+
+        // Clear player positions after reset
+        for (uint8 i = 0; i < players.length; i++) {
+            playerPositions[players[i]] = 255; // Reset to an invalid position
+        }
+    }
+
+    function addTokensToPrizePool(uint256 amount) external onlyOwner nonReentrant {
+        require(gameToken.transferFrom(msg.sender, address(this), amount), "Token transfer failed");
+        prizePool += amount;
+    }
+
+    function withdrawTokensFromPrizePool(uint256 amount) external onlyOwner nonReentrant {
+        require(amount <= prizePool, "Not enough tokens in the prize pool");
+        prizePool -= amount;
+        require(gameToken.transfer(owner, amount), "Token transfer failed");
+    }
+
+    function getTreasurePosition() public view onlyOwner returns (uint8) {
         return treasurePosition;
     }
 
