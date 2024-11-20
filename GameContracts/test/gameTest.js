@@ -14,12 +14,12 @@ describe("TreasureHunt", function () {
 
     // Deploy TreasureHunt
     const TreasureHunt = await ethers.getContractFactory("TreasureHunt");
-    const treasureHunt = await TreasureHunt.deploy(gameToken.target, owner.address);
+    const treasureHunt = await TreasureHunt.deploy(gameToken.target, owner.address); 
     console.log("TreasureHunt deployed to:", treasureHunt.target);
 
     // Mint tokens to players for testing
     await gameToken.mint(player1.address, ethers.parseEther("10000"));
-    await gameToken.mint(player2.address, ethers.parseEther("10000"));
+    await gameToken.mint(player2.address, ethers.parseEther("2000"));
 
     return { treasureHunt, gameToken, owner, player1, player2 };
   }
@@ -45,34 +45,19 @@ describe("TreasureHunt", function () {
     it("Should reward the winner when they find the treasure", async function () {
       const { treasureHunt, gameToken, owner, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
     
-      // Approve tokens for player1 to make a move
       await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
-    
-      // Simulate a move where player1 finds the treasure
       await treasureHunt.connect(player1).move(1);
     
-      // Fetch the treasure position after player1's move
       const tPosition = await treasureHunt.connect(owner).getTreasurePosition();
     
-      // Approve tokens for player2 to make a move
       await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
     
-      // Fetch the prize pool before player2 makes a move
       const prizePoolBefore = await treasureHunt.prizePool();
-    
-      // Convert prize pool from wei to ether using ethers v6 syntax
       const prizePoolBeforeEther = ethers.formatEther(prizePoolBefore);
-    
-      // Player2 moves to the same position as the treasure
       await treasureHunt.connect(player2).move(tPosition);
     
-      // Fetch the prize pool after player2 makes a move
       const prizePoolAfter = await treasureHunt.prizePool();
-    
-      // Convert prize pool from wei to ether using ethers v6 syntax
       const prizePoolAfterEther = ethers.formatEther(prizePoolAfter);
-    
-      // Check that the prize pool after the move is less than before
       expect(Number(prizePoolAfterEther)).to.be.lessThan(Number(prizePoolBeforeEther));
     
       // Log the prize pool in Ether
@@ -80,9 +65,7 @@ describe("TreasureHunt", function () {
       console.log("Prize Pool After in Ether:", prizePoolAfterEther);
     });
     
-    
-    
-    
+
     it("Should allow player to make a valid move", async function () {
       const { treasureHunt, gameToken, player1 } = await loadFixture(deployTreasureHuntFixture);
       
@@ -106,15 +89,9 @@ describe("TreasureHunt", function () {
     });
 
     it("Should prevent player from moving twice in same round", async function () {
-      const { treasureHunt, gameToken, player2 } = await loadFixture(deployTreasureHuntFixture);
-         
-      // Approve tokens for the game
+      const { treasureHunt, gameToken, player2 } = await loadFixture(deployTreasureHuntFixture); 
       await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
-         
-      // Make first valid move
       await treasureHunt.connect(player2).move(1);
-    
-      // Attempt second move in same round
       await expect(treasureHunt.connect(player2).move(2))
         .to.be.revertedWith("Player has already moved this round.");
     });
@@ -125,9 +102,39 @@ describe("TreasureHunt", function () {
       await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
       
       await treasureHunt.connect(player1).move(1);
-      expect(await treasureHunt.prizePool()).to.equal(2000);
+      
+      expect(await treasureHunt.prizePool()).to.equal(ethers.parseEther("2000"));
     });
+
+    it("Check balance after reward share", async function () {
+      const { treasureHunt, gameToken, owner, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
+         
+      await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
+      await treasureHunt.connect(player1).move(1);
+    
+      const tPosition = await treasureHunt.connect(owner).getTreasurePosition();
+    
+      await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
+      await treasureHunt.connect(player2).move(tPosition);
+
+      expect(await treasureHunt.prizePool()).to.equal(ethers.parseEther("320"));
+      const ownerBalance = await gameToken.balanceOf(owner.address);
+      expect(ownerBalance).to.equal(ethers.parseEther("80"));
+      const player2Balance = await gameToken.balanceOf(player2.address);
+      expect(player2Balance).to.equal(ethers.parseEther("3600"));
   });
+
+  it("Should fail if a player moves to occupied position", async function () {
+    const { treasureHunt, gameToken, owner, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
+    await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
+      await treasureHunt.connect(player1).move(1);
+      await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
+    await expect(
+      treasureHunt.connect(player2).move(1)
+    ).to.be.revertedWith("Position already occupied.");
+  });
+});
+
 
   describe("Game State", function () {
     it("Should return correct game state", async function () {

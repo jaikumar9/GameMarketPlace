@@ -64,6 +64,7 @@ contract TreasureHunt is ReentrancyGuard {
 
     function move(uint8 newPosition) public  onlyOncePerRound validMove(newPosition) {
         // Transfer tokens from player to the contract as the move cost
+        require(!isOccupied[newPosition], "Position already occupied.");
         require(gameToken.transferFrom(msg.sender, address(this), moveCost), "Token transfer failed");
 
         if (!isPlayer[msg.sender]) {
