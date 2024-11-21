@@ -43,7 +43,15 @@ contract TreasureHunt is ReentrancyGuard {
         moveCost = 2000 * 10**tokenDecimals; // Adjust for token decimals
 
         // Initialize treasure position
-        treasurePosition = uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.number))) % TOTAL_CELLS);
+        treasurePosition = uint8(uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            block.number,
+            block.prevrandao,
+            msg.sender,
+            address(this)
+        ))) % TOTAL_CELLS);
+
+        
         round = 1;
     }
 
@@ -62,7 +70,7 @@ contract TreasureHunt is ReentrancyGuard {
         _;
     }
 
-    function move(uint8 newPosition) public  onlyOncePerRound validMove(newPosition) {
+    function move(uint8 newPosition) public onlyOncePerRound validMove(newPosition) {
         // Transfer tokens from player to the contract as the move cost
         require(!isOccupied[newPosition], "Position already occupied.");
         require(gameToken.transferFrom(msg.sender, address(this), moveCost), "Token transfer failed");
@@ -100,7 +108,15 @@ contract TreasureHunt is ReentrancyGuard {
 
         require(vacantPositions.length > 0, "No vacant adjacent positions available.");
 
-        return vacantPositions[uint256(keccak256(abi.encodePacked(block.timestamp))) % vacantPositions.length];
+        return vacantPositions[uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            block.number,
+            block.prevrandao,
+            msg.sender,
+            address(this),
+            round,
+            currentPosition
+        ))) % vacantPositions.length];
     }
 
     function _filterVacantPositions(uint8[] memory positions) internal view returns (uint8[] memory) {
@@ -134,7 +150,15 @@ contract TreasureHunt is ReentrancyGuard {
 
         require(vacantCount > 0, "No vacant positions available.");
 
-        return allPositions[uint256(keccak256(abi.encodePacked(block.timestamp))) % vacantCount];
+        return allPositions[uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            block.number,
+            block.prevrandao,
+            msg.sender,
+            address(this),
+            round,
+            vacantCount
+        ))) % vacantCount];
     }
 
     function _getAdjacentPositions(uint8 position) internal pure returns (uint8[] memory) {
@@ -163,7 +187,7 @@ contract TreasureHunt is ReentrancyGuard {
         }
         return true;
     }
-
+ 
     function _winGame() internal nonReentrant {
         winner = msg.sender;
         uint256 reward = (prizePool * 90) / 100;
@@ -190,7 +214,14 @@ contract TreasureHunt is ReentrancyGuard {
 
     function _resetGame() internal {
         round++;
-        treasurePosition = _getRandomVacantPosition(); // Move treasure to any vacant position
+        treasurePosition = uint8(uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            block.number,
+            block.prevrandao,
+            msg.sender,
+            address(this),
+            round
+        ))) % TOTAL_CELLS); // Move treasure to a new random position
 
         // Reset player states
         for (uint256 i = 0; i < players.length; i++) {

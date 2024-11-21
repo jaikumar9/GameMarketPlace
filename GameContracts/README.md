@@ -11,12 +11,14 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat ignition deploy ./ignition/modules/Lock.js
 ```
-$ npx hardhat ignition verify chain-80002 
+npx hardhat ignition deploy ignition/modules/deploy.js --network amoy --verify
+npx hardhat ignition verify chain-80002 
+npx hardhat test --network amoy
 
 
-Deployed Addresses and Verified Contracts
+Deployed Addresses and Verification Status
 
-GameMarketplaceModule#GameToken - 0x68C419f4986251eE774d09b6e0E8514EB8DdEf1D
-GameMarketplaceModule#MockUSDT - 0x459B5C8881CF1a739834962FAF307851bd402739
-GameMarketplaceModule#DepositAndGetGameTokenContract - 0x116Dbbb71281b83e392b25b96F12c343b97919AE
-GameMarketplaceModule#TreasureHunt - 0x6D0F90CB4506bE778E1B4DD0cA3bfBe65A99e756 
+GameMarketplaceModule#GameToken - 0x7Abb3E5250648990b7d408D6b62D47cec9BAf314      
+GameMarketplaceModule#MockUSDT - 0xCA66834cD90fF801f8D0D52Abe37FF2c90853067       
+GameMarketplaceModule#DepositAndGetGameTokenContract - 0x4CdB4C0deeD0D2e3b5079b178AACE5dEEd7decd5
+GameMarketplaceModule#TreasureHunt - 0xf3492b0d663FCEd2214d78fe81fA07ac071Ce1A7 

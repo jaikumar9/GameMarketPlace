@@ -151,5 +151,29 @@ describe("TreasureHunt", function () {
         treasureHunt.connect(player1).getTreasurePosition()
       ).to.be.revertedWith("Only the owner can call this function.");
     });
+
+    
+
+    it("Should check the treasure position changed after a player's move", async function () {
+      const { treasureHunt, gameToken, owner, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
+  
+      const initialTreasurePosition = await treasureHunt.connect(owner).getTreasurePosition();
+      console.log("Initial Treasure Position:", initialTreasurePosition.toString());
+    
+     
+      await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
+      await treasureHunt.connect(player1).move(1);
+    
+
+      const treasurePositionAfterMove = await treasureHunt.connect(owner).getTreasurePosition();
+      console.log("Treasure Position After Move 1:", treasurePositionAfterMove.toString());
+
+     await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
+     await treasureHunt.connect(player2).move(2);
+
+     const treasurePositionAfterMove2 = await treasureHunt.connect(owner).getTreasurePosition();
+      console.log("Treasure Position After Move 2:", treasurePositionAfterMove2.toString());
+      expect(treasurePositionAfterMove).to.not.equal(treasurePositionAfterMove2);
+    });
   });
 });
