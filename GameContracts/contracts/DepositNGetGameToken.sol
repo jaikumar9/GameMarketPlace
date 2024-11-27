@@ -28,7 +28,7 @@ contract DepositAndGetGameTokenContract is ReentrancyGuard {
 
     event TokensDeposited(uint256 amount);
     event TokensWithdrawn(uint256 amount);
-    event TokensPurchased(address buyer, uint256 amount);
+    event TokensPurchased(address buyer, uint256 amount); 
 
     constructor(
         address _owner,
@@ -163,9 +163,6 @@ contract DepositAndGetGameTokenContract is ReentrancyGuard {
 
     emit TokensDeposited(GTAmt); // Emitting event for GT tokens deposited
 }
-
-   
-
 
    function withdrawCollectedUSDT(uint _amount) external onlyOwner {
     uint256 totalUsdtAmount = USDT.balanceOf(address(this));

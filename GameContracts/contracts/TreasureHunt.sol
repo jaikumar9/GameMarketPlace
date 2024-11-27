@@ -18,7 +18,7 @@ contract TreasureHunt is ReentrancyGuard {
     address public owner;
     address public winner;
 
-    mapping(address => uint8) public playerPositions;
+    mapping(address => uint8) public playerPositions; // Maps player to their grid position
     mapping(address => bool) public hasMoved;
     mapping(address => bool) public isPlayer;
     mapping(uint8 => bool) public isOccupied; // Tracks if a position is occupied by a player
@@ -51,7 +51,6 @@ contract TreasureHunt is ReentrancyGuard {
             address(this)
         ))) % TOTAL_CELLS);
 
-        
         round = 1;
     }
 
@@ -80,7 +79,7 @@ contract TreasureHunt is ReentrancyGuard {
             isPlayer[msg.sender] = true;
         }
 
-        playerPositions[msg.sender] = newPosition;
+        playerPositions[msg.sender] = newPosition; // Record the player's position
         isOccupied[newPosition] = true; // Mark the position as occupied
         prizePool += moveCost;
         hasMoved[msg.sender] = true;
@@ -129,7 +128,6 @@ contract TreasureHunt is ReentrancyGuard {
             }
         }
 
-        // Resize the array to the number of vacant positions
         uint8[] memory result = new uint8[](vacantCount);
         for (uint8 i = 0; i < vacantCount; i++) {
             result[i] = vacantPositions[i];
@@ -187,28 +185,21 @@ contract TreasureHunt is ReentrancyGuard {
         }
         return true;
     }
- 
+
     function _winGame() internal nonReentrant {
         winner = msg.sender;
         uint256 reward = (prizePool * 90) / 100;
         uint256 ownerShare = (prizePool * 2) / 100;
         uint256 carryOver = (prizePool * 8) / 100;
 
-        // Update prize pool to carry over before making transfers
         prizePool = carryOver;
 
-        // Transfer the 90% reward to the winner
         require(gameToken.transfer(winner, reward), "Token transfer to winner failed");
-
-        // Transfer the 2% share to the owner
         require(gameToken.transfer(owner, ownerShare), "Token transfer to owner failed");
 
         emit GameWon(winner, reward);
-
-        // Emit RewardDistributed event
         emit RewardDistributed(winner, reward, ownerShare, carryOver);
 
-        // Reset the game for the next round
         _resetGame();
     }
 
@@ -221,23 +212,19 @@ contract TreasureHunt is ReentrancyGuard {
             msg.sender,
             address(this),
             round
-        ))) % TOTAL_CELLS); // Move treasure to a new random position
+        ))) % TOTAL_CELLS);
 
-        // Reset player states
         for (uint256 i = 0; i < players.length; i++) {
             hasMoved[players[i]] = false;
-            isOccupied[playerPositions[players[i]]] = false; // Mark the previous position as unoccupied
-        }
-
-        // Clear the occupied positions mapping
-        for (uint8 i = 0; i < TOTAL_CELLS; i++) {
-            isOccupied[i] = false; // Mark all positions as vacant
-        }
-
-        // Clear player positions after reset
-        for (uint8 i = 0; i < players.length; i++) {
+            isOccupied[playerPositions[players[i]]] = false;
             playerPositions[players[i]] = 255; // Reset to an invalid position
         }
+
+     for (uint256 i = 0; i < players.length; i++) {
+        playerPositions[players[i]] = 0; // Explicit reset to 0
+    }
+    delete players; // Clear the players array
+
     }
 
     function addTokensToPrizePool(uint256 amount) external onlyOwner nonReentrant {
@@ -257,5 +244,9 @@ contract TreasureHunt is ReentrancyGuard {
 
     function getGameState() public view returns (address, uint256) {
         return (winner, prizePool);
+    }
+
+     function getPlayerPosition(address player) external view returns (uint256) {
+        return playerPositions[player];
     }
 }
