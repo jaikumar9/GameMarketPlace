@@ -23,6 +23,7 @@ contract TreasureHunt is ReentrancyGuard {
     mapping(address => bool) public isPlayer;
     mapping(uint8 => bool) public isOccupied; // Tracks if a position is occupied by a player
     address[] public players;
+     mapping(uint256 => mapping(address => uint8[])) public roundPlayerMoves; // Tracks moves by players per round
 
     event RewardDistributed(
         address indexed winner,
@@ -69,8 +70,7 @@ contract TreasureHunt is ReentrancyGuard {
         _;
     }
 
-    function move(uint8 newPosition) public onlyOncePerRound validMove(newPosition) {
-        // Transfer tokens from player to the contract as the move cost
+   function move(uint8 newPosition) public onlyOncePerRound validMove(newPosition) {
         require(!isOccupied[newPosition], "Position already occupied.");
         require(gameToken.transferFrom(msg.sender, address(this), moveCost), "Token transfer failed");
 
@@ -80,6 +80,7 @@ contract TreasureHunt is ReentrancyGuard {
         }
 
         playerPositions[msg.sender] = newPosition; // Record the player's position
+        roundPlayerMoves[round][msg.sender].push(newPosition); // Record the move for the round
         isOccupied[newPosition] = true; // Mark the position as occupied
         prizePool += moveCost;
         hasMoved[msg.sender] = true;
@@ -92,6 +93,8 @@ contract TreasureHunt is ReentrancyGuard {
             _moveTreasure(newPosition);
         }
     }
+
+    
 
     function _moveTreasure(uint8 playerPosition) internal {
         if (playerPosition % 5 == 0) {
@@ -227,6 +230,31 @@ contract TreasureHunt is ReentrancyGuard {
 
     }
 
+    function getRoundMoves(uint256 _round, address _player) public view returns (uint8[] memory) {
+        if (roundPlayerMoves[_round][_player].length > 0) {
+            // Case 1: Player has moved; return their moves
+            return roundPlayerMoves[_round][_player];
+        } else {
+            // Case 2: Player hasn't moved; return all occupied positions
+            uint8[] memory occupiedPositions = new uint8[](TOTAL_CELLS);
+            uint8 count = 0;
+
+            for (uint8 i = 0; i < TOTAL_CELLS; i++) {
+                if (isOccupied[i]) {
+                    occupiedPositions[count++] = i;
+                }
+            }
+
+            // Resize array to remove uninitialized slots
+            uint8[] memory result = new uint8[](count);
+            for (uint8 i = 0; i < count; i++) {
+                result[i] = occupiedPositions[i];
+            }
+
+            return result;
+        }
+    }
+
     function addTokensToPrizePool(uint256 amount) external onlyOwner nonReentrant {
         require(gameToken.transferFrom(msg.sender, address(this), amount), "Token transfer failed");
         prizePool += amount;
@@ -248,5 +276,8 @@ contract TreasureHunt is ReentrancyGuard {
 
      function getPlayerPosition(address player) external view returns (uint256) {
         return playerPositions[player];
+     }
+        function getCurrentRound() public view returns (uint256) {
+            return round;
     }
 }

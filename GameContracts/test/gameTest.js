@@ -262,5 +262,97 @@ describe("TreasureHunt", function () {
     });
     
   });
+
+  describe("Round Moves Tracking", function () {
+
+    it("Should return the move for a player who has already moved in the current round", async function () {
+      const { treasureHunt, gameToken, player1 } = await loadFixture(deployTreasureHuntFixture);
+  
+      // Approve tokens and make a move
+      await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
+      await treasureHunt.connect(player1).move(3);
+      
+      // Get the current round
+      const currentRound = await treasureHunt.getCurrentRound();
+  
+      // Fetch the round moves array for the current round
+      const roundMoves = await treasureHunt.getRoundMoves(currentRound, player1.address);
+  
+      console.log("Round Moves:", roundMoves.toString());
+  
+      // Verify that the player's move (3) is included in the array
+      expect(roundMoves[0]).to.equal(3); // Assuming the move is stored at the first index of the array
+    });
+  
+    it("Should return 0 for a player who has not moved in the current round", async function () {
+      const { treasureHunt, gameToken, player2 } = await loadFixture(deployTreasureHuntFixture);
+  
+      // Player 2 has not moved yet
+      // Ensure player2 has not interacted, so no move for them
+      const currentRound = await treasureHunt.getCurrentRound();
+      const roundMoves = await treasureHunt.getRoundMoves(currentRound, player2.address);
+  
+      console.log("Round Moves for Player 2:", roundMoves.toString());
+  
+      // Verify the round moves are default (0 or empty)
+      expect(roundMoves.length).to.equal(0); // Assuming that if no move is made, the array is empty
+    });
+  
+    it("Should handle multiple players correctly", async function () {
+      const { treasureHunt, gameToken, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
+  
+      // Approve tokens and make moves for both players
+      await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
+      await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
+  
+      await treasureHunt.connect(player1).move(5);
+      await treasureHunt.connect(player2).move(7);
+  
+      // Get current round
+      const currentRound = await treasureHunt.getCurrentRound();
+  
+      // Fetch round moves for both players
+      const player1RoundMoves = await treasureHunt.getRoundMoves(currentRound, player1.address);
+      const player2RoundMoves = await treasureHunt.getRoundMoves(currentRound, player2.address);
+  
+      console.log("Player 1 Round Moves:", player1RoundMoves.toString());
+      console.log("Player 2 Round Moves:", player2RoundMoves.toString());
+  
+      // Verify the moves are tracked correctly
+      expect(player1RoundMoves[0]).to.equal(5);  // Assuming the first index contains the move for player1
+      expect(player2RoundMoves[0]).to.equal(7);  // Assuming the first index contains the move for player2
+    });
+  
+    it("Should reset round moves after a second player moves to the treasure position", async function () {
+      const { treasureHunt, gameToken, player1, player2, owner } = await loadFixture(deployTreasureHuntFixture);
+    
+      // Approve tokens and make a move for player 1
+      await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));
+      await treasureHunt.connect(player1).move(4); // Player 1 makes a move
+    
+      // Get the current round and check round moves for player 1 before reset
+      const currentRoundBefore = await treasureHunt.getCurrentRound();
+      const roundMovesBefore = await treasureHunt.getRoundMoves(currentRoundBefore, player1.address);
+      expect(roundMovesBefore[0]).to.equal(4);  // The move made by player 1
+    
+      // Approve tokens and make a move for player 2 to the treasure position
+      await gameToken.connect(player2).approve(treasureHunt.target, ethers.parseEther("2000"));
+
+      const tposition = await treasureHunt.connect(owner).getTreasurePosition();
+      await treasureHunt.connect(player2).move(tposition); // Player 2 moves to the treasure position
+    
+      const currentRoundAfter = await treasureHunt.getCurrentRound(); 
+    
+      // Check round moves for player 1 again (after player 2's move)
+      const roundMovesAfterPlayer2 = await treasureHunt.getRoundMoves(currentRoundAfter, player1.address);
+      expect(roundMovesAfterPlayer2.length).to.equal(0);  // Player 1's move should be reset to 0
+    
+      // Optionally, check the round moves for player 2 after their move
+      const roundMovesForPlayer2 = await treasureHunt.getRoundMoves(currentRoundAfter, player2.address);
+    
+      // Verify that player 2's move is correctly tracked
+      expect(roundMovesForPlayer2.length).to.equal(0);  // The move made by player 2
+    });
+  });
   
 });
