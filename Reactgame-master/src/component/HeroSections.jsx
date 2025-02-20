@@ -8,7 +8,7 @@ export default function HeroSections() {
     <div className="backsideImage">
       <Navbar />
       <div className="container">
-        <div className="row">
+        <div className="">
           <div className="p-5 mt-5 d-flex justify-content-center text-center">
             <div className="heading-container">
               <div className="heading text-white">
@@ -19,11 +19,9 @@ export default function HeroSections() {
               </div>
             </div>
           </div>
-
-          <div className="text-white d-flex justify-content-center text-center">
+          <div className="text-white d-flex justify-content-center text-center mt-5">
             <p>Lorem ipsum dolor sit amet consectetuer adipiscing elit.</p>
           </div>
-
           <div className="getstart-btn d-flex justify-content-center">
             <button className="text-white">
               Launch App <RiArrowRightUpLine />
@@ -31,9 +29,7 @@ export default function HeroSections() {
           </div>
         </div>
       </div>
-      <div className="mt-5">
-        <Footer />
-      </div>
+      <div className="">{/* <Footer /> */}</div>
     </div>
   );
 }

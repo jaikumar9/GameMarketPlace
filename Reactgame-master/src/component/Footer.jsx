@@ -5,8 +5,8 @@ import { FaTwitter } from "react-icons/fa";
 
 function Footer() {
   return (
-    <>
-      <div className="container mt-5">
+    <div className="footerFixed">
+      <div className="container">
         <div className="row">
           <div className="col-md-12">
             <div className="d-flex justify-content-between">
@@ -22,13 +22,13 @@ function Footer() {
 
              </div>
             </div>
-            <div className="text-white text-center">
+            <div className="text-white text-center mt-3">
              <p>Lorem ipsum - Copyright  ©  2024, All rights reserved</p>
              </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

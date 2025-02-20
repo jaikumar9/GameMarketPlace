@@ -1,292 +1,106 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-// import Butons from "./Butons";
 
 function Token() {
   const boxes = Array.from({ length: 100 }, (_, i) => i + 1);
+  const [clickedBox, setClickedBox] = useState(null);
+  const [randomCount, setRandomCount] = useState(null);
+  const [openPopup, setOpenPopup] = useState(null); // Track which popup is open
+
+  // Function to toggle a specific popup
+  const togglePopup = (popupId, event) => {
+    event.stopPropagation(); // Prevent body click from immediately closing the popup
+    setOpenPopup((prev) => (prev === popupId ? null : popupId)); // Toggle the specific popup
+  };
+
+  // Close all popups when clicking outside
+  const handleBodyClick = () => {
+    setOpenPopup(null);
+  };
+  useEffect(() => {
+    // Attach event listener to the document body
+    document.body.addEventListener("click", handleBodyClick);
+
+    // Cleanup event listener on unmount
+    return () => {
+      document.body.removeEventListener("click", handleBodyClick);
+    };
+  }, []);
+
+  // Function to handle the box click and generate a random count
+  const handleBoxClick = (box) => {
+    if (clickedBox === null) {
+      const randomCount = Math.floor(Math.random() * 100) + 1;
+      setClickedBox(box);
+      setRandomCount(randomCount);
+    }
+  };
 
   return (
     <>
       <div className="backsideImage">
         <Navbar />
         <div className="container">
-          <div className="row gap-4 justify-content-center">
-            {/* Left Section - Mines Box */}
-            <div className="col-md-3 rounded mines-box">
-              <div className="text-white">
-                <h6>Mines</h6>
-                <p style={{ color: "#867F85" }}>
-                  Find gems on field and avoid mines
-                </p>
+          <div className="d-flex align-items-center justify-content-between mt-5">
+            <div>
+              <div
+                className="balncBx px-3 py-2 rounded"
+                onClick={(e) => togglePopup("popup1", e)}
+              >
+                Balance: <span className="text-white ms-2">25.0</span>
               </div>
-
-              {/* Wager Input */}
-              <div className="form-group">
-                <label
-                  htmlFor="inputBox"
-                  className="form-label"
-                  style={{ color: "#867F85" }}
-                >
-                  Wager
-                </label>
-                <input
-                  type="text"
-                  id="buyInput"
-                  className="form-control border-0"
-                  style={{
-                    backgroundColor: "#251A23",
-                    color: "white",
-                    padding: "5px",
-                    borderRadius: "4px",
-                  }}
-                />
-              </div>
-
-              {/* Additional Input Boxes */}
-              <div className="row mt-3">
-                <div className="col-md-3 col-sm-6 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="MIN"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
+              {openPopup === "popup1" && (
+                <div className="popup-box p-3 rounded">
+                  <div className="popup-box-inner">
+                    <p className="text-white text-center fs-2 fw-medium">
+                      Better Luck <br /> Next Time!
+                    </p>
+                  </div>
                 </div>
-                <div className="col-md-3 col-sm-6 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="1/2"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-3 col-sm-6 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="*2"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-3 col-sm-6 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="MAX"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-3" style={{ color: "#867F85" }}>
-                <h6>Mines number (1-24)</h6>
-              </div>
-
-              {/* Additional Input Boxes */}
-              <div className="row mt-4">
-                <div className="col-md-4 col-sm-12 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0"
-                    placeholder="|"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-2 col-sm-3 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="3"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-2 col-sm-3 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="5"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-2 col-sm-3 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="10"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-2 col-sm-3 mb-2">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0 text-center"
-                    placeholder="20"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="row mt-3 gap-3">
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0"
-                    placeholder="Mines"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "2px 2px 60px 2px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-5">
-                  <input
-                    type="text"
-                    className="form-control custom-placeholder border-0"
-                    placeholder="Gems"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "2px 2px 60px 2px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group mt-2">
-                <label
-                  htmlFor="inputBox"
-                  className="form-label"
-                  style={{ color: "#867F85" }}
-                >
-                  Multiple bets(1-100)
-                </label>
-                <input
-                  type="text"
-                  id="buyInput"
-                  placeholder="|"
-                  className="form-control border-0"
-                  style={{
-                    backgroundColor: "#251A23",
-                    color: "white",
-                    padding: "5px",
-                    borderRadius: "4px",
-                  }}
-                />
-              </div>
-
-              <div className="row mt-2">
-                <div className="col-md-6">
-                  <label
-                    htmlFor="inputBox"
-                    className="form-label"
-                    style={{ color: "#867F85" }}
-                  >
-                    Max payout
-                  </label>
-                  <input
-                    type="text"
-                    id="buyInput"
-                    placeholder="|"
-                    className="form-control border-0"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label
-                    htmlFor="inputBox"
-                    className="form-label"
-                    style={{ color: "#867F85" }}
-                  >
-                    Total Wager
-                  </label>
-                  <input
-                    type="text"
-                    id="buyInput"
-                    placeholder="|"
-                    className="form-control border-0"
-                    style={{
-                      backgroundColor: "#251A23",
-                      color: "white",
-                      padding: "5px",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="start-game-btn text-center mt-3">
-                <button>Start Game</button>
-              </div>
+              )}
             </div>
-
-            {/* Right Section */}
-            <div className="col-md-5 rounded mines-box gap-3 d-flex flex-wrap">
-              {boxes.map((box) => (
-                <div
-                  key={box}
-                  className="col text-white box-game"
-                  style={{ width: "10%" }}
-                >
-                  {box < 10 ? `0${box}` : box}
-                  {/* Add leading zero for numbers < 10 */}
+            <div>
+              <h2
+                className="fs-3 text-white mb-0"
+                onClick={(e) => togglePopup("popup2", e)}
+              >
+                Game
+              </h2>
+              {openPopup === "popup2" && (
+                <div className="popup-box p-3 rounded">
+                  <div className="popup-box-inner">
+                    <p className="text-white text-center fs-2 fw-medium">
+                      Congratulations! <br /> You are the Winner.
+                    </p>
+                  </div>
                 </div>
-              ))}
-
-              {/* <Butons /> */}
+              )}
+            </div>
+            <p className="fs-6 text-white-50 mb-0">Find way to win</p>
+          </div>
+          <div className="mt-5">
+            <div className="nwBox">
+              <div className="rounded mines-box">
+                {boxes.map((box) => (
+                  <div
+                    key={box}
+                    className="text-white box-game"
+                    onClick={() => handleBoxClick(box)}
+                    style={{
+                      cursor:
+                        clickedBox === null || clickedBox === box
+                          ? "pointer"
+                          : "not-allowed",
+                      opacity:
+                        clickedBox !== null && clickedBox !== box ? 0.5 : 1,
+                    }}
+                  >
+                    {/* Show the random count if the box has been clicked */}
+                    {clickedBox === box && randomCount}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -233,7 +233,8 @@ describe("TreasureHunt", function () {
     });
 
     it("Should reset all player positions to 0 after a player finds the treasure", async function () {
-      const { treasureHunt, gameToken, owner, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
+      const { treasureHunt, gameToken,
+          owner, player1, player2 } = await loadFixture(deployTreasureHuntFixture);
       
       // Approve tokens for both players
       await gameToken.connect(player1).approve(treasureHunt.target, ethers.parseEther("2000"));

@@ -1,3 +1,9 @@
+html, body{
+  height: 100%;
+}
+#root{
+  height: 100%;
+}
 .navbar {
   position: absolute;
   width: 100%; 
@@ -10,49 +16,11 @@
   font-weight: bold;
 }
 
-/* Add responsiveness for smaller screens */
-@media (max-width: 768px) {
-  .heading h1 {
-    font-size: 3rem; 
-  }
-
-  .navbar-nav {
-    flex-direction: column; 
-  }
-  .background-image {
-    width: 43%;
-  }
-  .circle-img{
-    width: 40px!important;
-  }
-
-  .navbar-collapse ul{
-    border: none !important;
-    gap: 10px !important;
-  }
-  .backsideImage {
-    height: auto !important; 
-  }
-
-}
-
-@media (max-width: 426px) {
-  .background-image {
-    width: 59% !important;
-  }
-  .circle-img{
-    width: 40px!important;
-  }
-  .navbar-collapse ul{
-    border: none !important;
-    gap: 10px !important;
-  }
-}
-
 ul.navbar-nav {
   margin-left: auto;
   margin-right: auto;
 }
+.navMidSec{border: 1px solid #dee2e6; border-radius: 40px;}
 
 .mt-5.d-flex {
   margin-top: 2rem !important; 
@@ -90,7 +58,9 @@ ul.navbar-nav {
 } */
 
 .circle-img{
-  padding: 6px;
+  width: 45px;
+  min-width: 45px;
+  height: 45px;
 }
 
 .gt-btn button{
@@ -104,9 +74,10 @@ ul.navbar-nav {
   background-image: url('../public/Images/background-image.png');
   background-size: cover;    
   background-position: center; 
-  height: 919px; 
+  height: 100vh; 
   position: relative; 
   background-color: #1b1b1b;
+  overflow: hidden;
 }
 
 .form-label {
@@ -141,6 +112,10 @@ ul.navbar-nav {
 
 .mines-box{
   background: radial-gradient(30.7% 30.7% at 50% 50%, #382C36 0%, #292128 100%);
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
+  padding: 10px; 
 }
 
 .custom-placeholder{
@@ -161,26 +136,135 @@ ul.navbar-nav {
 }
 
 .box-game{
-    width: 6%;
-    height: 40px;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    background: radial-gradient(50% 50% at 50% 50%, #685D61 0%, #55484C 100%);
-    color: linear-gradient(169.9deg, #BDB4B7 7.56%, #55484C 84.14%);
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  text-align: center;
+  background: radial-gradient(50% 50% at 50% 50%, #685D61 0%, #55484C 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px; 
 }
 
-.mine button{
+.mine-button{
   background: #65A30D;
-  padding: 2px 35px 2px 35px;
+  /* padding: 2px 35px 2px 35px; */
 }
 
-.mine-2 button{
+.mine-button-2{
   background: #DC2626;
-  padding: 2px 35px 2px 35px;
+  /* padding: 2px 35px 2px 35px; */
 }
 
 .mine-3 button{
   padding: 2px 35px 2px 35px;
   background-color: #787678;
+}
+
+.swap-box{
+  padding: 200px 70px 200px 70px;
+}
+.rightSection{width: 85%; display: flex; align-items: center; justify-content: space-between;}
+.nwBox{
+  width: 450px;
+  height: 450px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+.balncBx{
+  border: 1px solid #ccc;
+  color: #e7b00e;
+  font-size: 14px;
+}
+.popup-box {
+  position: absolute;
+  top: 100%;
+  left: 0px;
+  top: 0;
+  z-index: 1000;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.popup-box-inner{
+  width: 320px;
+  height: auto;
+  color: rgb(255, 255, 255);
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 4px 8px;
+  border: 1px solid #ccc;
+  padding: 20px 30px;
+  border-radius: 20px;
+  background: #0000009c;
+} 
+.footerFixed{
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+}
+/* Add responsiveness for smaller screens */
+@media (max-width: 991px){
+  .navMidSec{border: none;}
+  .leftSection{width: 100%;}
+  .rightSection{
+    position: absolute;
+    width: 100%;
+    top: 74px;
+    left: 0;
+    border-radius: 19px;
+    background: #000;
+    box-shadow: 0px 0px 9px #ffffff3d;
+    display: block;
+  }
+  .m-md{margin: 0 !important;}
+}
+@media (max-width: 768px) {
+  .heading h1 {
+    font-size: 3rem; 
+  }
+
+  .navbar-nav {
+    flex-direction: column; 
+  }
+  .background-image {
+    width: 43%;
+  }
+
+  .navbar-collapse ul{
+    border: none !important;
+    gap: 10px !important;
+  }
+
+}
+@media (max-width: 550px) {
+  .nwBox{
+    width: 100%; 
+    height: 100%; 
+  }
+  .box-game{
+    width: 30px;
+    height: 30px;
+  }
+  .mines-box{
+    gap: 3px;
+    padding: 5px;
+  }
+}
+@media (max-width: 425px) {
+  .background-image {
+    width: 80% !important;
+  }
+  .navbar-collapse ul{
+    border: none !important;
+    gap: 10px !important;
+  }
+.swap-box{
+  padding: 40px 20px 40px 20px !important;
+}
+.popup-box-inner{width: 100%;}
 }
